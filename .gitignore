@@ -1,0 +1,8 @@
+*mysql.txt
+*.sql
+/venv
+/mysql.txt
+__pycache__
+.env
+/resources/
+/test_data/
