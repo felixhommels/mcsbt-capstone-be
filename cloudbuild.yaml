@@ -1,0 +1,22 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      ["build", "-t", "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA", "."]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA"]
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    args:
+      [
+        "run",
+        "deploy",
+        "mcsbt-capstone-be",
+        "--image",
+        "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA",
+        "--region",
+        "europe-southwest1",
+        "--platform",
+        "managed",
+        "--allow-unauthenticated",
+      ]
+images:
+  - "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA"
