@@ -405,7 +405,7 @@ def get_route_info(dep_iata: str, arr_iata: str, token: str = Depends(verify_tok
     return route_data_list
 
 if __name__ == "__main__":
-    # import os
-    # port = int(os.getenv("PORT", 8080))
-    # uvicorn.run("main:app", host="0.0.0.0", port=port)
-    uvicorn.run("main:app", reload=True)
+    import os
+    port = int(os.getenv("PORT", 8080))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    # uvicorn.run("main:app", reload=True)
