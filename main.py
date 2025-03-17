@@ -42,7 +42,7 @@ AS_API_URL = os.getenv("AS_API_URL")
 
 @app.get("/")
 def root():
-    return {"message": "SkyLedger API Running Successfully!"}
+    return {"message": "SkyLedger API Running"}
 
 @app.post("/new-user")
 def new_user(user: User):
