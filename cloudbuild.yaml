@@ -1,22 +1,37 @@
 steps:
+  # Build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
       ["build", "-t", "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA", "."]
+
+  # Push the container image to Container Registry
   - name: "gcr.io/cloud-builders/docker"
     args: ["push", "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA"]
+
+  # Deploy container image to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
     args:
-      [
-        "run",
-        "deploy",
-        "mcsbt-capstone-be",
-        "--image",
-        "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA",
-        "--region",
-        "europe-southwest1",
-        "--platform",
-        "managed",
-        "--allow-unauthenticated",
-      ]
+      - "run"
+      - "deploy"
+      - "mcsbt-capstone-be"
+      - "--image"
+      - "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA"
+      - "--region"
+      - "europe-southwest1"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--set-env-vars=AIRLINES_TABLE=airlines_test"
+      - "--set-env-vars=AIRPORTS_TABLE=airports_test"
+      - "--set-env-vars=FLIGHTS_TABLE=flights_test"
+      - "--set-env-vars=USERS_TABLE=users_test"
+      - "--set-env-vars=CO2_TABLE=aircraft_co2"
+      - "--set-env-vars=AS_API_URL=http://api.aviationstack.com/v1/flights"
+      - "--set-env-vars=ALGORITHM=HS256"
+      - "--update-secrets=SECRET_KEY=JW_SecretKey_Capstone:latest"
+      - "--update-secrets=AS_API_KEY=AviationStack_API_Key:latest"
+      - "--update-secrets=API_KEY=FlightRadar24_API_Key:latest"
+
 images:
   - "gcr.io/$PROJECT_ID/mcsbt-capstone-be:$COMMIT_SHA"
