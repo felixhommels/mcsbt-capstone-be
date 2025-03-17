@@ -40,6 +40,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 AS_API_KEY = os.getenv("AS_API_KEY")
 AS_API_URL = os.getenv("AS_API_URL")
 
+@app.get("/")
+def root():
+    return {"message": "SkyLedger API Running"}
+
 @app.post("/new-user")
 def new_user(user: User):
     if get_user(user.email):
