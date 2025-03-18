@@ -44,12 +44,6 @@ AS_API_URL = os.getenv("AS_API_URL")
 def root():
     return {"message": "SkyLedger API Running"}
 
-@app.get("/packages")
-def list_packages():
-    import pkg_resources
-    installed_packages = {pkg.key: pkg.version for pkg in pkg_resources.working_set}
-    return installed_packages
-
 @app.post("/new-user")
 def new_user(user: User):
     if get_user(user.email):
