@@ -21,7 +21,7 @@ dataset_id = "capstone"
 
 app.add_middleware(
        CORSMiddleware,
-       allow_origins=["*", "http://localhost:5173"],  # Allow all origins
+       allow_origins=["*"],  # Allow all origins
        allow_credentials=True,
        allow_methods=["*"],
        allow_headers=["*"],
@@ -43,6 +43,12 @@ AS_API_URL = os.getenv("AS_API_URL")
 @app.get("/")
 def root():
     return {"message": "SkyLedger API Running"}
+
+@app.get("/packages")
+def list_packages():
+    import pkg_resources
+    installed_packages = {pkg.key: pkg.version for pkg in pkg_resources.working_set}
+    return installed_packages
 
 @app.post("/new-user")
 def new_user(user: User):
