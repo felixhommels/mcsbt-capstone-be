@@ -8,6 +8,9 @@ import jwt as pyjwt
 from datetime import datetime, timedelta
 import os
 import bcrypt
+import dotenv
+
+dotenv.load_dotenv()
 
 client = bigquery.Client(project="capstone-felixh")
 dataset_id = "capstone"
