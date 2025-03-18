@@ -1,27 +1,14 @@
-import requests
-import os
-import dotenv
-import pytz
+from utils.time import convert_to_utc_timestamp
+from models.flight import APIFlightData
 from datetime import datetime, timedelta
-from models import APIFlightData
-
-dotenv.load_dotenv()
-
-API_KEY = os.getenv("API_KEY")
+import requests
+from core.config import API_KEY
 
 headers = {
     "Accept": "application/json",
     "Accept-Version": "v1",
     "Authorization": f"Bearer {API_KEY}"
 }
-
-def convert_to_utc_timestamp(time_str, timezone_str, date_str):
-    local_tz = pytz.timezone(timezone_str)
-    local_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-    local_time = local_tz.localize(local_time)
-    utc_time = local_time.astimezone(pytz.utc)
-    return int(utc_time.timestamp())
-
 
 def get_flight_data(flight_number: str, date: str, departure_time: str, timezone: str):
     # Date validation
@@ -59,6 +46,3 @@ def get_flight_data(flight_number: str, date: str, departure_time: str, timezone
         attempts += 1  
 
     return {}
-
-
-# print(get_flight_data("LX14", "2025-02-18", "13:00", "Europe/Zurich"))

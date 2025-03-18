@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends
-from utility import verify_token, client, dataset_id, user_table, get_user, create_access_token, verify_password, flights_table
+from core.security import verify_token
+from core.config import dataset_id, user_table, flights_table
+from db.client import client
+from db.queries import get_user
 from models import User, UserLogin, UserUpdatePassword, UserUpdateEmail, UserID
+from core.security import create_access_token, verify_password
 from google.cloud import bigquery
 import uuid
 import bcrypt

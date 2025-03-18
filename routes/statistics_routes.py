@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends
-from utility import verify_token, convert_time, client, dataset_id, flights_table
+from core.security import verify_token
+from core.config import dataset_id, flights_table
+from db.client import client
+from utils.time import convert_time
 from google.cloud import bigquery
 import fastapi
 

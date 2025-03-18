@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
-from utility import verify_token, AS_API_KEY, AS_API_URL
+from core.security import verify_token
+from core.config import AS_API_KEY, AS_API_URL
 import requests
 from datetime import datetime
 

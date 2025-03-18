@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Depends
 import fastapi
-from utility import verify_token, client, dataset_id, airport_table, flights_table, get_airport_info, get_airline_info, calculate_flight_emissions, compute_distance, estimate_flight_duration, format_duration_as_time, airline_table, co2_table
-from api_fetch import get_flight_data
-from models import ManualFlight, RetrieveFlight, FlightID
+from db.client import client
+from core.config import dataset_id, airport_table, flights_table, airline_table, co2_table
+from api.get_flight import get_flight_data
+from services.emissions_service import calculate_flight_emissions
+from services.airport_service import get_airport_info
+from services.airline_service import get_airline_info
+from utils.geo import compute_distance
+from utils.time import format_duration_as_time, estimate_flight_duration
+from core.security import verify_token
+from models.flight import ManualFlight, RetrieveFlight, FlightID
 from google.cloud import bigquery
 import uuid
 
