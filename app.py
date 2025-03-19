@@ -26,4 +26,7 @@ def root():
     return {"message": "SkyLedger API Running"}
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", reload=True)
+    import os
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+    
