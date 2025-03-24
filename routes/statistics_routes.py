@@ -19,18 +19,27 @@ def get_statistics(user_id: str, token: str = Depends(verify_token)):
             ]
         )
 
-        query = f"SELECT * FROM `{table_id}` WHERE user_id = @user_id"
+        query = f"""
+        SELECT * FROM `{table_id}` 
+        WHERE user_id = @user_id 
+        AND (deleted = FALSE OR deleted IS NULL)
+        AND flight_id NOT IN (
+            SELECT flight_id 
+            FROM `{table_id}` 
+            WHERE user_id = @user_id 
+            AND deleted = TRUE
+        )
+        """
+        
         query_job = client.query(query, job_config=job_config)
         flights = query_job.result()
         flights_dict = [dict(row) for row in flights]
 
-        # Initialize statistics
         total_distance = sum(flight["estimated_distance"] if flight["estimated_distance"] is not None else 0 for flight in flights_dict)
         total_flights = len(flights_dict)
         total_carbon = sum(flight["estimated_co2"] if flight["estimated_co2"] is not None else 0 for flight in flights_dict)
         total_time = sum(convert_time(flight["estimated_time"]) if flight["estimated_time"] is not None else 0 for flight in flights_dict)
 
-        # Initialize yearly statistics
         yearly_stats = {}
         
         top_airports = {}
@@ -45,15 +54,11 @@ def get_statistics(user_id: str, token: str = Depends(verify_token)):
             aircraft = flight.get('aircraft')
             route = flight.get('route')
             
-            # Extract year from flight date
             date = flight.get('date')
             year = None
             if date is not None:
-                # Assuming flight_date is in a format that can be sliced for year
-                # If it's a datetime object, you would use flight_date.year instead
-                year = str(date)[:4]  # Adjust based on your date format
+                year = str(date)[:4]
             
-            # Update yearly statistics
             if year is not None:
                 if year not in yearly_stats:
                     yearly_stats[year] = {
@@ -67,13 +72,11 @@ def get_statistics(user_id: str, token: str = Depends(verify_token)):
                         "top_routes": {}
                     }
                 
-                # Update yearly totals
                 yearly_stats[year]["total_flights"] += 1
                 yearly_stats[year]["total_distance"] += flight.get("estimated_distance", 0) or 0
                 yearly_stats[year]["total_carbon"] += flight.get("estimated_co2", 0) or 0
                 yearly_stats[year]["total_time"] += convert_time(flight.get("estimated_time", 0)) if flight.get("estimated_time") is not None else 0
                 
-                # Update yearly top items
                 if origin is not None:
                     yearly_stats[year]["top_airports"][origin] = yearly_stats[year]["top_airports"].get(origin, 0) + 1
                 if destination is not None:
@@ -85,7 +88,6 @@ def get_statistics(user_id: str, token: str = Depends(verify_token)):
                 if route is not None:
                     yearly_stats[year]["top_routes"][route] = yearly_stats[year]["top_routes"].get(route, 0) + 1
 
-            # Update overall top items
             if origin is not None:
                 top_airports[origin] = top_airports.get(origin, 0) + 1
             if destination is not None:
@@ -97,7 +99,6 @@ def get_statistics(user_id: str, token: str = Depends(verify_token)):
             if route is not None:
                 top_routes[route] = top_routes.get(route, 0) + 1
         
-        # Round carbon values in yearly stats
         for year in yearly_stats:
             yearly_stats[year]["total_carbon"] = round(yearly_stats[year]["total_carbon"], 2)
             yearly_stats[year]["total_time"] = convert_time(yearly_stats[year]["total_time"])

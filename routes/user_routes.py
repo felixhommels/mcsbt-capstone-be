@@ -76,7 +76,7 @@ def delete_user(user: UserID, token: str = Depends(verify_token)):
         status_code=200, 
         content={"message": "User and associated flights deleted successfully!"}
     )
-
+    
 @router.post("/login", summary="Login a user", description="Login a user with an email and password.")
 def login(user: UserLogin):
     user_fetched = get_user(user.email)

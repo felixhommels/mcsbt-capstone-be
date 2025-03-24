@@ -26,7 +26,18 @@ def get_flights(user_id: str, token: str = Depends(verify_token)):
             ]
         )
 
-        query = f"SELECT * FROM `{table_id}` WHERE user_id = @user_id"
+        query = f"""
+        SELECT * FROM `{table_id}` 
+        WHERE user_id = @user_id 
+        AND (deleted = FALSE OR deleted IS NULL)
+        AND flight_id NOT IN (
+            SELECT flight_id 
+            FROM `{table_id}` 
+            WHERE user_id = @user_id 
+            AND deleted = TRUE
+        )
+        """
+        
         query_job = client.query(query, job_config=job_config)
         flights = query_job.result()
         flights_list = [dict(row) for row in flights]
@@ -159,3 +170,64 @@ def delete_flight(flight_id: FlightID, token: str = Depends(verify_token)):
         return fastapi.responses.JSONResponse(status_code=200, content={"message": "Flight deleted successfully!"})
     else:
         return fastapi.responses.JSONResponse(status_code=400, content={"errors": "Flight ID is required"})
+    
+@router.post("/soft-delete-flight", summary="Soft delete a flight", description="Soft delete a flight with a flight ID.")
+def soft_delete_flight(flight_id: FlightID, token: str = Depends(verify_token)):
+    if flight_id:
+        try:
+            table_id = f"{client.project}.{dataset_id}.{flights_table}"
+            
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter("flight_id", "STRING", flight_id.flight_id)
+                ]
+            )
+            
+            query = f"SELECT * FROM `{table_id}` WHERE flight_id = @flight_id"
+            query_job = client.query(query, job_config=job_config)
+            results = list(query_job.result())
+            
+            if not results:
+                return fastapi.responses.JSONResponse(
+                    status_code=404, 
+                    content={"error": f"Flight with ID {flight_id.flight_id} not found"}
+                )
+            
+            flight_dict = dict(results[0])
+            
+            for key, value in flight_dict.items():
+                if hasattr(value, 'isoformat') and callable(getattr(value, 'isoformat')):
+                    flight_dict[key] = value.isoformat()
+                elif isinstance(value, (complex, set, frozenset)):
+                    flight_dict[key] = str(value)
+            
+            flight_dict["deleted"] = True
+            
+            rows_to_insert = [flight_dict]
+            
+            errors = client.insert_rows_json(table_id, rows_to_insert)
+            
+            if errors:
+                return fastapi.responses.JSONResponse(
+                    status_code=500, 
+                    content={"error": f"Error inserting data: {errors}"}
+                )
+            
+            return {"message": f"Flight with ID {flight_id.flight_id} has been soft-deleted successfully"}
+            
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"Error in soft-delete: {str(e)}")
+            print(f"Traceback: {error_trace}")
+            
+            return fastapi.responses.JSONResponse(
+                status_code=500, 
+                content={"error": f"An error occurred: {str(e)}"}
+            )
+    else:
+        return fastapi.responses.JSONResponse(
+            status_code=400, 
+            content={"error": "Flight ID is required"}
+        )
+    
